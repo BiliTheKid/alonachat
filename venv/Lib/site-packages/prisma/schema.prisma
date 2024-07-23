@@ -1,0 +1,119 @@
+// database
+datasource db {
+  provider = "postgresql"
+  url = "postgresql://postgres:yh2409@localhost:5433/alona"
+}
+
+// generator
+generator client {
+  provider             = "prisma-client-py"
+  recursive_type_depth = 5
+}
+// Define the Surveys table
+model Survey {
+  SurveyID   Int      @id @default(autoincrement())
+  PersonID   Int
+  Timestamp  DateTime
+  Title      String
+
+  // Establish a relationship to Questions
+  questions  Question[]
+}
+
+enum enumQtype {
+  Location
+  OpenQuestion
+  RadioButton
+}
+
+// Define the Questions table
+model Question {
+  QuestionID         Int              @id @default(autoincrement())
+  SurveyID           Int
+  Type               enumQtype
+  Text               String
+  Order              Int
+
+  // Establish a relationship to Survey
+  survey             Survey           @relation(fields: [SurveyID], references: [SurveyID])
+
+  // Establish a relationship to OptionalAnswers
+  optionalAnswers    OptionalAnswer[]
+
+  // Establish a reverse relation to UserAnswer
+  userAnswers        UserAnswer[]
+
+  // Establish a relation to the following question
+  followingQuestions OptionalAnswer[] @relation(name: "FollowingQuestions")
+}
+
+// Define the OptionalAnswers table
+model OptionalAnswer {
+  AnswerID     Int      @id @default(autoincrement())
+  QuestionID   Int
+  Text         String
+  Order        Int
+  followingQuestionID Int?
+
+  // Establish a relationship to Question
+  question     Question @relation(fields: [QuestionID], references: [QuestionID])
+
+  // Establish a reverse relation to Question for followingQuestions
+  followingQuestion Question? @relation(name: "FollowingQuestions", fields: [followingQuestionID], references: [QuestionID])
+}
+
+// Define the UserAnswers table
+model UserAnswer {
+  PersonID     Int
+  QuestionID   Int
+  AnswerID     Int
+  Text         String?
+  Location     String?
+  Timestamp    DateTime
+
+  // Establish relationships to Question and OptionalAnswer
+  question     Question @relation(fields: [QuestionID], references: [QuestionID])
+
+  // Primary key setup
+  @@id([PersonID, QuestionID])
+}
+
+// model resident {
+//   id            Int     @id @default(autoincrement())
+//   identity_number      String?
+//   firstName     String?
+//   lastName      String?
+//   previous_lats_name      String?
+//   gender        String?
+//   status        String?
+//   personalStatus String?
+//   street        String?
+//   house         String?
+//   entrance      String?
+//   apartment     String?
+//   city          String?
+//   zipCode       String?
+//   phone         String?
+//   age           String?
+//   birthDate     String?
+//   countryOfBirth String?
+//   aliyahDate    String?
+//   deathDate     String?
+//   father        String?
+//   fathersOrigin String?
+//   mother        String?
+//   mothersOrigin String?
+//   spouseOrigin  String?
+//   familyOrigin  String?
+//   children      String?
+//   source        String?
+//   update        String?
+//   notes         String?
+//   evacuation_status String?
+//   evacuation_type String?
+//   evacuation_name String?
+//   distance String?
+//   seconddis String?
+// } 
+
+
