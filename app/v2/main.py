@@ -15,7 +15,7 @@ import os
 import re 
 load_dotenv()
 from models.user import UserState
-from helpers.helpers import send_message_non , get_template_sender , TemplateSender , send_message_gen, send_message_name_hotel, get_message_sender
+from helpers.helpers import send_message_non , get_template_sender , TemplateSender , send_message_gen, send_message_name_hotel, get_message_sender, send_message_name_identification, send_message_name_id, send_message_place, send_message_ppl
 # Initialize logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ async def shutdown():
 
 ## regex for general questions checking
 COMMANDS = {
-    'TEXT': re.compile(r' היי יש טילים ואין לנו מרחב מוגן|טילים|שלום|הי, אנחנו לא יכולים יותר לשהות במחסה שלנו. האם ניתן לקבל כתובת להתפנות אליה?'),
+    'TEXT': re.compile(r' הי| שלום| היי| מה קורה? אהלן'),
 }
 
 user_states = {}
@@ -80,7 +80,7 @@ def get_user_state(user_id: str) -> UserState:
 async def receive_message(request: Request):
     # Receive and process the data
     data = await request.json()
-
+    print(data)
 
     # Extract and map fields
     incoming_message = extract_and_map_fields(data)
@@ -130,9 +130,12 @@ def handle_transition(user_state: UserState, user_input: dict) -> str:
     print(f"User response: {user_response}")
 
     if current_stage == 'start':
-        user_state.update_state('Legal_confirmation')
-        sender = get_template_sender("start")       
-        response = sender.send_template(user_input) 
+        user_state.update_state('identification')
+        # sender = get_template_sender("start")      
+        #response = sender.send_template(user_input) 
+        message_sender = get_message_sender("identification")  # Create the appropriate sender instance
+        response = send_message_name_identification(user_input.get("to"),user_input.get("from_number"))  # Send the template
+
 
     elif current_stage == 'Legal_confirmation':
         if user_response in ['כן', 'לא']:
@@ -198,15 +201,25 @@ def handle_transition(user_state: UserState, user_input: dict) -> str:
         # user_state.update_state('ASKING_SPECIFIC_QUESTIONS')
         # return f"Nice to meet you, {user_response}. What brings you here today?"
     
-    elif current_stage == 'hotel':
-        user_state.update_data('hotel', user_response)
-        print(f"תשובה לשאלה באיזה מלון אתה שוהה: {user_response}")
-        user_state.update_state('children_exist')
+    elif current_stage == 'identification':
+        user_state.update_data('id_number', user_response)
+        # print(f" מה מס תז שלך? {user_response} היי, ")
+        # message_sender = get_message_sender("identification")
+        send_message_name_id(user_input.get("to"),user_input.get("from_number"),user_response)
+        # response = message_sender.send_message(user_input)
+        user_state.update_state('id_number')
 
-    elif current_stage == 'apartment':
-        user_state.update_data('apartment', user_response)
-        print(f"תשובה לשאלה באיזה דירה אתה שוהה: {user_response}")
-        user_state.update_state('children_exist')
+    elif current_stage == 'id_number':
+        user_state.update_data('id_number', user_response)
+        send_message_place(user_input.get("to"),user_input.get("from_number"))
+        # user_state.update_state('children_exist')
+        user_state.update_state('place')
+
+    elif current_stage == 'place':
+        user_state.update_data('place', user_response)
+        send_message_ppl(user_input.get("to"),user_input.get("from_number"))
+        # user_state.update_state('children_exist')
+        user_state.update_state('place')
 
     elif current_stage == 'collecting_basic_info_other':
         user_state.update_data('collecting_basic_info_other', user_response)

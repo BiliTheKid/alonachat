@@ -1,7 +1,7 @@
 // database
 datasource db {
   provider = "postgresql"
-  url = "postgresql://postgres:yh2409@localhost:5433/alona"
+  url = env("DATABASE_URL")
 }
 
 // generator
@@ -78,6 +78,35 @@ model UserAnswer {
   @@id([PersonID, QuestionID])
 }
 
+model UserAnswerNew {
+  id                 Int     @id @default(autoincrement())
+  idNumber           String  @unique  // תז (pk, מאומת)
+  fullName           String  // שם מלא
+  settlementCode     Int     // קוד יישוב (fk)
+  accessibility      Boolean // נגישות
+  pets               Boolean // חיות מחמד
+  numberOfPeople     Int     // מספר נפשות (1-12)
+  hotelOption1       String? // אופציה מלון 1
+  hotelOption2       String? // אופציה מלון 2
+  hotelOption3       String? // אופציה מלון 3
+  selectedHotel      String? // מלון נבחר
+  
+  settlement         Settlement @relation(fields: [settlementCode], references: [id])
+}
+
+model Settlement {
+  id                 Int     @id @default(autoincrement()) // id שהוא ה pk
+  code               Int     @unique                      // קוד יישוב
+  name               String  // שם יישוב
+  alias1             String? // שדה alias 1
+  alias2             String? // שדה alias 2
+  alias3             String? // שדה alias 3
+  userAnswers        UserAnswerNew[]
+}
+
+
+
+
 // model resident {
 //   id            Int     @id @default(autoincrement())
 //   identity_number      String?
@@ -117,3 +146,26 @@ model UserAnswer {
 // } 
 
 
+// model HotelInformation {
+//   id                     Int      @id @default(autoincrement())
+//   tourismRoomAvailability String?  // זמינות חדרים
+//   rowSummaryCheck        String?   // בדיקת סיכום של שורה
+//   lastModified           DateTime? // השתנה ב:
+//   supplierNumber         String?   // מספר ספק מרכבה
+//   facilityName           String?   // שם מתקן אכסון
+//   hotelName              String?   // שם המלון
+//   settlementName         String?   // ישוב ‏(שם מתקן אכסון) (חמל תיירות - מתקני איכסון)
+//   street                 String?   // רחוב ‏(שם מתקן אכסון) (חמל תיירות - מתקני איכסון)
+//   primaryContactFirstName String?  // איש קשר ראשי - שם פרטי ‏(שם מתקן אכסון) (חמל תיירות - מתקני איכסון)
+//   primaryContactPhone    String?   // איש קשר ראשי - טלפון ‏(שם מתקן אכסון) (חמל תיירות - מתקני איכסון)
+//   updateDateTime         DateTime? // תאריך ושעת עדכון
+//   roomsAvailableYesterday Int?     // חדרים פנויים אתמול
+//   roomsAvailableToday    Int?      // חדרים פנויים היום
+//   singleRoomsAvailable   Int?      // מס חדרי סינגל פנויים
+//   doubleRoomsAvailable   Int?      // מס חדרים זוגיים פנויים
+//   familyRoomsAvailable   Int?      // מס חדרים משפחתיים פנויים
+//   accessibleRoomsAvailable Int?    // מס חדרים נגישים פנויים
+//   primaryContactLastName String?   // איש קשר ראשי - שם משפחה ‏(שם מתקן אכסון) (חמל תיירות - מתקני איכסון)
+//   emailAddress           String?   // כתובת דואר אלקטרוני ‏(שם מתקן אכסון) (חמל תיירות - מתקני איכסון)
+//   roundApproval          String?   // אישור חשבות סבב א ‏(שם מתקן אכסון) (חמל תיירות - מתקני איכסון)
+// }
